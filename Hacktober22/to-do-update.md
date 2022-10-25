@@ -1,98 +1,84 @@
-### This is a fun CSS effect that follows your mouse around. It could be useful when you want to draw attention to an element on your page.
+Google's Game of the Year features a playful CSS animation on the homepage, with the title words tumbling and bumping into one another. Here's how it was done. 
 
-It's a great effect to start with because ee need very little HTML:
-
+The first step is to define the webpage document with HTML. It consists of the HTML document container, which stores a head and body section. While the head section is used to load the external CSS and JavaScript resources, the body is used to store the page content.
 ```
-<div class="demo">
-  <div class="perspective-container">
-    <div class="card"></div>
-  </div>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+<title>Off Kilter Text Animation</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+<script src="code.js"></script>
+</head>
+<body>
+  <h1 class="animate backwards">The Animated Title</h1>
+  <h1 class="animate forwards">The Animated Title</h1>
+  <h1 class="animate mixed">The Animated Title </h1>
+</body>
+</html>
 ```
+The page content consists of three h1 title tags that will show the different variations of the animation effect. While any text can be inserted into these tags, their animation is defined by the names in the class attribute. The presentation and animation settings for these class names will be defined in the CSS later on.
 
-First, we position the demo and set perspective for our 3D transform:
+Next, create a new file called 'code.js'. We want to find all page elements with the animate class and create an array list representing each word of the inner text. The initial animation delay is also defined in this step. Page content is not available until the page has fully loaded, so this code is being placed inside the window’s load event listener.
+
+The word content of the animation items needs to be contained inside a span element. To do this, the existing HTML content is reset to blank, then a loop is used to make the word in the identified 'words' list a span element. Additionally, an animationDelay style is applied – calculated in relation to the initial delay (specified below) and the word’s index position.
 ```
-
-.demo {
-  background-color: hsl(207, 9%, 19%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  width: 100%;
+window.addEventListener("load", function(){
+	var delay = 2;
+	var nodes = document.querySelectorAll
+(".animate");
+	for(var i=0; i<nodes.length; i++){
+		var words = nodes[i].innerText.split(" ");
+		nodes[i].innerHTML = "";
+for(var i2=0; i2<words.length; i2++){
+			var item = document.createElement("span");
+			item.innerText = words[i2];
+			var calc = (delay+((nodes.length + i2)/3));
+	item.style.animationDelay = calc+"s";
+			nodes[i].appendChild(item);
 }
+	}
+});```
 
-.perspective-container {
-  perspective: 800px;
-}
+Create a new file called styles.css. Now we'll set the presentation rules that will be part of every word element in the animation, controlled by their span tag. Display as block, combined with centred text alignment, will result in each word appearing on a separate line horizontally aligned to the middle of its container. Relative positioning will be used to animate in relation to its text-flow position.
 ```
-
-Then style the div we want to animate:
-```
-.card {
-  background-image: url(https://media.giphy.com/media/sIIhZliB2McAo/giphy.gif);
-  background-size: cover;
-  box-shadow: 0 0 140px 10px rgba(0,0,0,.5);
-  position: relative;
-  height: 300px;
-  width: 500px;
-  overflow: hidden; /* Try removing this to see how the sheen works! */
-  --sheenX: 0; /* Set these with JavaScript */
-  --sheenY: 0;
-}
-```
-
-Here we set a background, then we set overflow to hidden so that we can add a sheen effect later. We also set css variables, sheenX and sheenY.
-
-These sheen variables will help position the sheen effect. We use them in our card's after pseudo-element:
-```
-.card::after {
-  content: "";
-  position: absolute;
-  top: -400px;
-  right: -400px;
-  bottom: -400px;
-  left: -400px;
-  background: linear-gradient(217deg, rgba(255,255,255,0), rgba(255,255,255,0) 35%, rgba(255,255,255,0.25) 45%, rgba(255,255,255,.25) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
-  transform: translateX(var(--sheenX)) translateY(var(--sheenY));
+.animate span{
+	display: block;
+	position: relative;
+	text-align: center;
 }
 ```
-Here we're making sure the pseudo-element is bigger than the container. This will give us something to slide around on top of the card using transform.
+Animation elements that have the backwards and forwards class have a specific animation applied to them. This step defines the animation to apply to span elements whose parent container has both the animate and backwards or forwards class. 
 
-The transform property is making use of those CSS variables we set earlier. We will set those with JavaScript. Let's set up the JavaScript to first listen for mouse events:
-
-document.onmousemove = handleMouseMove;
-
-We now need a handleMouseMove function to handle onmousemove:
+Note how there is no space between the animate and backwards class reference, meaning the parent element must have both.
 ```
-function handleMouseMove(event) {
-  const height = window.innerHeight;
-  const width = window.innerWidth;
-  // Creates angles of (-20, -20) (left, bottom) and (20, 20) (right, top)
-  const yAxisDegree = event.pageX / width * 40 - 20;
-  const xAxisDegree = event.pageY / height * -1 * 40 + 20;
-  target.style.transform = `rotateY(${yAxisDegree}deg) rotateX(${xAxisDegree}deg)`;
-  // Set the sheen position
-  setSheenPosition(event.pageX / width, event.pageY / width);
+.animate.backwards > span{
+	animation: animateBackwards 1s ease-in-out 
+forwards;
+}
+.animate.forwards > span{
+	animation: animateForwards 1s ease-in-out 
+forwards;
 }
 ```
-
-Our function takes the window height and width and creates an angle on the X and Y axes. We then set these to the transform style of our card. This gives the card an angle based on the mouse!
-
-We next call a function to set the pseudo-element's position:
+The mixed animation is defined using the same settings used for the forwards and backwards animations. Instead of applying the animations to every child of the parent, the nth-child selector is used to apply alternating animation settings. The backwards animation is applied to every even-number child, while the forwards animation is applied to every odd-number child.
 ```
-function setSheenPosition(xRatio, yRatio) {
-  // This creates a "distance" up to 400px each direction to offset the sheen
-  const xOffset = 1 - (xRatio - 0.5) * 800;
-  const yOffset = 1 - (yRatio - 0.5) * 800;
-  target.style.setProperty('--sheenX', `${xOffset}px`)
-  target.style.setProperty('--sheenY', `${yOffset}px`)
+.animate.mixed > span:nth-child(even){
+	animation: animateBackwards 1s ease-in-out 
+forwards;
+}
+.animate.mixed > span:nth-child(odd){
+	animation: animateForwards 1s ease-in-out 
+forwards;
 }
 ```
-Our pseudo-element looks best when it moves in the opposite direction to the mouse. To achieve this we create a number between -0.5 and 0.5 that changes in the opposite direction by calculating the ratio by -1.
-
-We multiply this number by 800 as we want it to scale up to a maximum of 400px, which is how far we set the sheen pseudo-element outside the card.
-
-Lastly we set these offset values to our CSS variable properties, and the browser's renderer does the rest.
-
-We now have a card that turns to face our mouse while the sheen effect moves in the opposite direction on top. This creates a nice, eye-catching effect.
+The animations we've just created are made with an initial 'from' starting position, with no vertical position or rotation adjustment. The 'to' position is the final state of the animation, which sets the elements with an adjusted vertical position and rotation state. Slightly different ending settings are used for both animations to avoid the text becoming unreadable due to overlap in mixed animations.
+```
+@keyframes animateForwards {
+	from { top: 0; transform: rotate(0deg); }
+	to { top: .9em; transform: rotate(-15deg); }
+}
+@keyframes animateBackwards {
+	from { top: 0; transform: rotate(0deg); }
+	to { top: 1em; transform: rotate(25deg); }
+}
+```
